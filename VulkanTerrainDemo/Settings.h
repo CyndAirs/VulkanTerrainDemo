@@ -1,0 +1,40 @@
+#pragma once
+
+#define WINDOW_WIDTH 1500
+#define WINDOW_HEIGHT 900
+
+#define PATCH_SIZE 16
+
+#define DEF_RATIO 0
+
+#define DEF_Z_SCALE 255
+
+#define ZOOM 2.0f
+
+#define TEXTURE_SOURCE "textures/grass4.jpg"
+
+#ifdef NDEBUG
+#define BUILD_ENABLE_VULKAN_DEBUG 0
+#define BUILD_ENABLE_VULKAN_RUNTIME_DEBUG 0
+#else
+#define BUILD_ENABLE_VULKAN_DEBUG 1
+#define BUILD_ENABLE_VULKAN_RUNTIME_DEBUG 1
+#endif
+
+#define OPEN_FILE_BUTTON 0
+#define FILEPATH_LABEL 1
+#define RATIO_LABEL 2
+#define RATIO_FIELD_1 3
+#define RATIO_FIELD_2 4
+#define SIZE_LABEL 5
+#define SIZE_FIELD 6
+#define Z_SCALE_LABEL 7
+#define Z_SCALE_FIELD 8
+#define FPS_LABEL 9
+#define VERTICES_LABEL 10
+#define INDICES_LABEL 11
+#define INFO_LABEL 12
+#define APPLY_BUTTON 13
+
+
+#define DEVICE_EXTENSIONS {	VK_KHR_SWAPCHAIN_EXTENSION_NAME }
