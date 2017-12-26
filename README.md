@@ -1,4 +1,4 @@
-# VulkanTerrainDemo
+﻿# VulkanTerrainDemo
 Height map-based terrain modeling demo in Vulkan API.
 
 =========================================================
@@ -37,11 +37,11 @@ dla wersji 32-bitowej
 
 - C/C++→General→Additional Include Directories dodać:
 
-{ścieżka do STB}\stb-master;{ścieżka do GLM}\glm-0.9.8.3\glm;{ścieżka do GLFW}\glfw-3.2.1.bin.WIN64\include;{ścieżka do Vulkan SDK}\VulkanSDK\1.0.30.0\Include;
+{ścieżka do STB}\stb-master;{ścieżka do GLM}\glm-0.9.8.3\;{ścieżka do GLFW}\glfw-3.2.1.bin.WIN64\include;{ścieżka do Vulkan SDK}\VulkanSDK\1.0.30.0\Include;
 
 dla wersji 64-bitowej lub
 
-{ścieżka do STB}\stb-master;{ścieżka do GLM}\glm-0.9.8.3\glm;{ścieżka do GLFW}\glfw-3.2.1.bin.WIN32\include;{ścieżka do Vulkan SDK}\VulkanSDK\1.0.30.0\Include;
+{ścieżka do STB}\stb-master;{ścieżka do GLM}\glm-0.9.8.3\;{ścieżka do GLFW}\glfw-3.2.1.bin.WIN32\include;{ścieżka do Vulkan SDK}\VulkanSDK\1.0.30.0\Include;
 
 dla wersji 32-bitowej
 
@@ -57,11 +57,11 @@ Dla Release
 
 - Linker→General→Additional Library Dependencies
 
-{ścieżka do GLFW}\glfw-3.2.1.bin.WIN64\lib-vc2015;{ścieżka do Vulkan SDK}\VulkanSDK\1.0.30.0\Bin;
+{ścieżka do GLFW}\glfw-3.2.1.bin.WIN64\lib-vc2015;{ścieżka do Vulkan SDK}\VulkanSDK\1.0.30.0\Lib;
 
 dla wersji 64-bitowej lub
 
-{ścieżka do GLFW}\glfw-3.2.1.bin.WIN32\lib-vc2015;{ścieżka do Vulkan SDK}\VulkanSDK\1.0.30.0\Bin32;
+{ścieżka do GLFW}\glfw-3.2.1.bin.WIN32\lib-vc2015;{ścieżka do Vulkan SDK}\VulkanSDK\1.0.30.0\Lib32;
 
 dla wersji 32-bitowej
 
