@@ -96,7 +96,7 @@ void Renderer::mainLoop(HWND gui)
 	std::chrono::time_point<std::chrono::system_clock> stop = std::chrono::system_clock::now();
 	std::chrono::duration<double> elapsedSeconds;
 	int frameCount = 0;
-	float rotation = 0.0f;
+	float rotationX = 0.0f, rotationY = 0.0f;
 	float time;
 	double fps;
 	std::string label;
@@ -112,6 +112,8 @@ void Renderer::mainLoop(HWND gui)
 
 	glfwSetWindowUserPointer(window, this);
 	glfwSetKeyCallback(window, Renderer::keyCallback);
+	glfwSetCursorPosCallback(window, Renderer::cursorPosCallback);
+	glfwSetMouseButtonCallback(window, Renderer::mouseClickCallback);
 
 	start = std::chrono::system_clock::now();
 	loopStart = std::chrono::system_clock::now();
@@ -122,11 +124,21 @@ void Renderer::mainLoop(HWND gui)
 
 		stop = std::chrono::system_clock::now();
 		time = std::chrono::duration_cast<std::chrono::milliseconds>(stop - loopStart).count() / 1000.0f;
-		if (rotateLeft) rotation += time * glm::radians(40.0f);
-		if (rotateRight) rotation -= time * glm::radians(40.0f);
+		if (xpos != lastXpos)
+		{
+			rotationX += (xpos - lastXpos) * glm::radians(1.0f);
+			lastXpos = xpos;
+		}
+		if (ypos != lastYpos)
+		{
+			rotationY += (ypos - lastYpos) * glm::radians(1.0f);
+			lastYpos = ypos;
+		}
+		if (rotateLeft) rotationX += time * glm::radians(100.0f);
+		if (rotateRight) rotationX -= time * glm::radians(100.0f);
 		loopStart = std::chrono::system_clock::now();
 
-		bufferManager.updateUniformBuffer(generateUniformData(rotation));
+		bufferManager.updateUniformBuffer(generateUniformData(rotationX, rotationY));
 		drawFrame();
 
 		stop = std::chrono::system_clock::now();
@@ -162,7 +174,7 @@ void Renderer::keyCallback(GLFWwindow* window, int key, int scancode, int action
 		if (app->getRotateRight() == true) 
 			app->stopRotation(); 
 
-	if ((key == GLFW_KEY_D || key == GLFW_KEY_LEFT) && action == GLFW_RELEASE)
+	if ((key == GLFW_KEY_A || key == GLFW_KEY_LEFT) && action == GLFW_RELEASE)
 		if (app->getRotateLeft() == true)
 			app->stopRotation(); 
 
@@ -170,13 +182,37 @@ void Renderer::keyCallback(GLFWwindow* window, int key, int scancode, int action
 		if (app->getRotateLeft() == false)
 			app->setRotateRight(); 
 
-	if ((key == GLFW_KEY_D || key == GLFW_KEY_LEFT) && action == GLFW_PRESS)
+	if ((key == GLFW_KEY_A || key == GLFW_KEY_LEFT) && action == GLFW_PRESS)
 		if (app->getRotateRight() == false)
 			app->setRotateLeft(); 
 
 }
 
 
+
+void Renderer::cursorPosCallback(GLFWwindow * window, double xpos, double ypos)
+{
+	Renderer* app = reinterpret_cast<Renderer*>(glfwGetWindowUserPointer(window));
+	if (app->mousePressed)
+	{
+		app->xpos = xpos;
+		app->ypos = ypos;
+	}
+}
+
+void Renderer::mouseClickCallback(GLFWwindow * window, int button, int action, int mods)
+{
+	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
+	{
+		Renderer* app = reinterpret_cast<Renderer*>(glfwGetWindowUserPointer(window));
+		app->mousePressed = true;
+	}
+	else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE)
+	{
+		Renderer* app = reinterpret_cast<Renderer*>(glfwGetWindowUserPointer(window));
+		app->mousePressed = false;
+	}
+}
 
 bool Renderer::getRotateLeft() {
 	return rotateLeft;
@@ -198,11 +234,12 @@ void Renderer::stopRotation() {
 	rotateLeft = rotateRight = false;
 }
 
-UniformBufferObject Renderer::generateUniformData(float rotation)
+UniformBufferObject Renderer::generateUniformData(float rotationX, float rotationY)
 {
 
 	UniformBufferObject ubo = {};
-	ubo.model = glm::rotate(glm::mat4(), rotation, glm::vec3(0.0f, 0.0f, 1.0f));
+	ubo.model *= glm::rotate(glm::mat4(), rotationX, glm::vec3(0.0f, 0.0f, 1.0f));
+	ubo.model *= glm::rotate(glm::mat4(), rotationY, glm::vec3(1.0f, 0.0f, 0.0f));
 	ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 	ubo.proj = glm::perspective(glm::radians(45.0f), swapChain.swapChainExtent.width / (float)swapChain.swapChainExtent.height, 0.1f, 10.0f);
 	ubo.lightPosition = glm::vec3(-30.0f, 30.0f, 30.0f);

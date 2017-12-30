@@ -79,6 +79,16 @@ public:
 	static void keyCallback(GLFWwindow * window, int key, int scancode, int action, int mods);
 
 	/**
+	* GLFW callback for cursor position change
+	* @param window application window
+	* @param xpos x position of cursor
+	* @param ypos y position of cursor
+	*/
+	static void cursorPosCallback(GLFWwindow* window, double xpos, double ypos);
+
+	static void mouseClickCallback(GLFWwindow* window, int button, int action, int mods);
+
+	/**
 	* Checks model rotation
 	* @returns true if model is rotating to th left
 	*/
@@ -154,7 +164,7 @@ private:
 	* @param rotation rotation of the model calulated based on time in radians
 	* @returns structure for uniform buffer
 	*/
-	UniformBufferObject generateUniformData(float rotation);
+	UniformBufferObject generateUniformData(float rotationX, float rotationY);
 
 	/**
 	* Initialises instance 
@@ -251,6 +261,10 @@ private:
 	* Flag to check if the model is rotating right
 	*/
 	bool rotateRight = false;
+
+	bool mousePressed = false;
+
+	double xpos = 0, ypos = 0, lastXpos = 0, lastYpos = 0;
 
 #if BUILD_ENABLE_VULKAN_DEBUG
 
