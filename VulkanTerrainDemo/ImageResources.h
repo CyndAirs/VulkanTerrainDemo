@@ -48,13 +48,17 @@ public:
 	void initImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags, VulkanDeleter<VkImageView>& imageView);
 
 	/** Copies image of given width and height to other image using command buffers 
-	* @param srcImage source image
-	* @param dstImage destination image
+	* @param buffer source buffer
+	* @param image destination image
 	* @param width image width
 	* @param height image height
 	*/
-	void copyImage(VkImage srcImage, VkImage dstImage, uint32_t width, uint32_t height);
-	
+	void copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
+	/**
+	* copied func from BufferManager. TODO, it was easiest way to get functionality
+	*/
+	void initBuffer(VkDeviceSize size, VkBufferUsageFlags bufferUsage, VkMemoryPropertyFlags memoryProperties, VulkanDeleter<VkBuffer>& buffer, VulkanDeleter<VkDeviceMemory>& bufferMemory);
+
 protected:
 
 	/** 

@@ -41,6 +41,9 @@ void DeviceManager::initDevice(VkInstance instance, VkSurfaceKHR surface)
 		deviceQueueCreateInfos.push_back(deviceQueueCreateInfo);
 	}
 
+	VkPhysicalDeviceFeatures deviceFeatures = {};
+	deviceFeatures.samplerAnisotropy = VK_TRUE;
+
 	VkDeviceCreateInfo deviceCreateInfo{};
 	deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 	deviceCreateInfo.queueCreateInfoCount = 1;
@@ -48,6 +51,7 @@ void DeviceManager::initDevice(VkInstance instance, VkSurfaceKHR surface)
 
 	deviceCreateInfo.enabledExtensionCount = deviceExtensions.size();
 	deviceCreateInfo.ppEnabledExtensionNames = deviceExtensions.data();
+	deviceCreateInfo.pEnabledFeatures = &deviceFeatures;
 
 	ErrorCheck(vkCreateDevice(gpu, &deviceCreateInfo, nullptr, device.replace()));
 
