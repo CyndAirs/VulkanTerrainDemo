@@ -347,6 +347,8 @@ void Renderer::drawFrame()
 	else ErrorCheck(result);
 }
 
+
+
 void Renderer::initSemaphores() {
 	VkSemaphoreCreateInfo semaphoreInfo = {};
 	semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
@@ -358,9 +360,15 @@ void Renderer::initSemaphores() {
 	}
 }
 
-
 #if BUILD_ENABLE_VULKAN_DEBUG
-
+std::wstring get_utf16(const std::string &str, int codepage)
+{
+	if (str.empty()) return std::wstring();
+	int sz = MultiByteToWideChar(codepage, 0, &str[0], (int)str.size(), 0, 0);
+	std::wstring res(sz, 0);
+	MultiByteToWideChar(codepage, 0, &str[0], (int)str.size(), &res[0], sz);
+	return res;
+}
 /** Initilises Vulkan's validation layer */
 VKAPI_ATTR VkBool32 VKAPI_CALL
 VulkanDebugCallback(
@@ -384,7 +392,7 @@ VulkanDebugCallback(
 	std::cout << stream.str();
 
 #ifdef _WIN32
-	if (flags & VK_DEBUG_REPORT_ERROR_BIT_EXT) { MessageBox(NULL, (LPCWSTR)stream.str().c_str(), L"ERROR", 0); };
+	if (flags & VK_DEBUG_REPORT_ERROR_BIT_EXT) { MessageBox(NULL, (LPCWSTR)get_utf16(stream.str(), CP_UTF8).c_str(), L"ERROR", 0); };
 #endif
 
 	return false;
