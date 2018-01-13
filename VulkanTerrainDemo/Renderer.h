@@ -264,7 +264,7 @@ private:
 
 	bool mousePressed = false;
 
-	float forward, right;
+	float forward, right, up;
 
 	double xpos = 0, ypos = 0, lastXpos = 0, lastYpos = 0;
 

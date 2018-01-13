@@ -137,7 +137,7 @@ void Renderer::mainLoop(HWND gui)
 
 		stop = std::chrono::system_clock::now();
 		elapsedSeconds = stop - start;
-		camera.ProcessKeyboard(forward,right,elapsedSeconds.count() / 1000.f);
+		camera.ProcessKeyboard(forward, right, up, elapsedSeconds.count() / 1000.f);
 		frameCount++;
 
 		if (elapsedSeconds.count() > 1.0) {
@@ -178,6 +178,14 @@ void Renderer::keyCallback(GLFWwindow* window, int key, int scancode, int action
 		app->forward = 1;
 	if ((key == GLFW_KEY_S || key == GLFW_KEY_DOWN) && action == GLFW_PRESS)
 		app->forward = -1;
+	if (key == GLFW_KEY_E && action == GLFW_PRESS)
+		app->up = -1;
+	if (key == GLFW_KEY_E && action == GLFW_RELEASE)
+		app->up = 0;
+	if (key == GLFW_KEY_Q && action == GLFW_PRESS)
+		app->up = 1;
+	if (key == GLFW_KEY_Q && action == GLFW_RELEASE)
+		app->up = 0;
 }
 
 
