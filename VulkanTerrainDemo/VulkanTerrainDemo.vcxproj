@@ -101,7 +101,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\stb-master;$(SolutionDir)Dependencies\glm;$(SolutionDir)Dependencies\glfw-3.2.1.bin.WIN64\include;$(SolutionDir)Dependencies\VulkanSDK\1.0.61.1\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\stb-master;$(SolutionDir)Dependencies\glm;$(SolutionDir)Dependencies\glfw-3.2.1.bin.WIN64\include;$(SolutionDir)Dependencies\nanogui\;$(SolutionDir)Dependencies\VulkanSDK\1.0.61.1\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
@@ -163,6 +163,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BufferManager.h" />
+    <ClInclude Include="Camera.hpp" />
     <ClInclude Include="CommandManager.h" />
     <ClInclude Include="DepthResources.h" />
     <ClInclude Include="DeviceManager.h" />

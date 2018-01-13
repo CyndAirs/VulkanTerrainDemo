@@ -12,6 +12,9 @@ Renderer::Renderer()
 	indices = {
 		0, 1, 2, 2, 3, 0
 	};
+
+	camera = Camera(glm::vec3(0.41f, -0.07f, 2.5f), glm::vec3(0, 1, 0), 270, 360);
+	firstMouse = true;
 }
 
 Renderer::Renderer(std::vector<Vertex> vertices, std::vector<uint32_t> indices, std::string textureSource)
@@ -19,6 +22,8 @@ Renderer::Renderer(std::vector<Vertex> vertices, std::vector<uint32_t> indices, 
 	this->vertices = vertices;
 	this->indices = indices;
 	this->textureSource = textureSource;
+	camera = Camera(glm::vec3(0.41f, -0.07f, 2.5f), glm::vec3(0, 1, 0), 270, 360);
+	firstMouse = true;
 }
 
 Renderer::~Renderer()
@@ -55,15 +60,15 @@ void Renderer::closeWindow()
 void Renderer::initVulkan()
 {
 	setupGlfw();
-	#if BUILD_ENABLE_VULKAN_DEBUG
+#if BUILD_ENABLE_VULKAN_DEBUG
 	setupDebug();
-	#endif
+#endif
 
 	initInstance();
 
-	#if BUILD_ENABLE_VULKAN_DEBUG
+#if BUILD_ENABLE_VULKAN_DEBUG
 	initDebug();
-	#endif	
+#endif	
 
 	initSurface();
 
@@ -117,25 +122,14 @@ void Renderer::mainLoop(HWND gui)
 
 	start = std::chrono::system_clock::now();
 	loopStart = std::chrono::system_clock::now();
+
+
 	while (!glfwWindowShouldClose(window)) {
-		
-		
+
 		glfwPollEvents();
 
 		stop = std::chrono::system_clock::now();
 		time = std::chrono::duration_cast<std::chrono::milliseconds>(stop - loopStart).count() / 1000.0f;
-		if (xpos != lastXpos)
-		{
-			rotationX += (xpos - lastXpos) * glm::radians(1.0f);
-			lastXpos = xpos;
-		}
-		if (ypos != lastYpos)
-		{
-			rotationY += (ypos - lastYpos) * glm::radians(1.0f);
-			lastYpos = ypos;
-		}
-		if (rotateLeft) rotationX += time * glm::radians(100.0f);
-		if (rotateRight) rotationX -= time * glm::radians(100.0f);
 		loopStart = std::chrono::system_clock::now();
 
 		bufferManager.updateUniformBuffer(generateUniformData(rotationX, rotationY));
@@ -143,7 +137,7 @@ void Renderer::mainLoop(HWND gui)
 
 		stop = std::chrono::system_clock::now();
 		elapsedSeconds = stop - start;
-
+		camera.ProcessKeyboard(forward,right,elapsedSeconds.count() / 1000.f);
 		frameCount++;
 
 		if (elapsedSeconds.count() > 1.0) {
@@ -156,10 +150,10 @@ void Renderer::mainLoop(HWND gui)
 			labeltemp = std::wstring(label.begin(), label.end());
 
 			SetDlgItemText(gui, FPS_LABEL, (LPCWSTR)labeltemp.c_str());
-			
+
 			start = std::chrono::system_clock::now();
 		}
-		
+
 	}
 
 	vkDeviceWaitIdle(deviceManager.getDevice());
@@ -168,24 +162,22 @@ void Renderer::mainLoop(HWND gui)
 void Renderer::keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
 	Renderer* app = reinterpret_cast<Renderer*>(glfwGetWindowUserPointer(window));
-
-
 	if ((key == GLFW_KEY_D || key == GLFW_KEY_RIGHT) && action == GLFW_RELEASE)
-		if (app->getRotateRight() == true) 
-			app->stopRotation(); 
-
+		app->right = 0;
 	if ((key == GLFW_KEY_A || key == GLFW_KEY_LEFT) && action == GLFW_RELEASE)
-		if (app->getRotateLeft() == true)
-			app->stopRotation(); 
-
+		app->right = 0;
 	if ((key == GLFW_KEY_D || key == GLFW_KEY_RIGHT) && action == GLFW_PRESS)
-		if (app->getRotateLeft() == false)
-			app->setRotateRight(); 
-
+		app->right = 1;
 	if ((key == GLFW_KEY_A || key == GLFW_KEY_LEFT) && action == GLFW_PRESS)
-		if (app->getRotateRight() == false)
-			app->setRotateLeft(); 
-
+		app->right = -1;
+	if ((key == GLFW_KEY_W || key == GLFW_KEY_UP) && action == GLFW_RELEASE)
+		app->forward = 0;
+	if ((key == GLFW_KEY_S || key == GLFW_KEY_DOWN) && action == GLFW_RELEASE)
+		app->forward = 0;
+	if ((key == GLFW_KEY_W || key == GLFW_KEY_UP) && action == GLFW_PRESS)
+		app->forward = 1;
+	if ((key == GLFW_KEY_S || key == GLFW_KEY_DOWN) && action == GLFW_PRESS)
+		app->forward = -1;
 }
 
 
@@ -195,9 +187,19 @@ void Renderer::cursorPosCallback(GLFWwindow * window, double xpos, double ypos)
 	Renderer* app = reinterpret_cast<Renderer*>(glfwGetWindowUserPointer(window));
 	if (app->mousePressed)
 	{
-		app->xpos = xpos;
-		app->ypos = ypos;
+		if (app->firstMouse)
+		{
+			app->lastX = xpos;
+			app->lastY = ypos;
+			app->firstMouse = false;
+		}
+
+		float xoffset = xpos - app->lastX;
+		float yoffset = app->lastY - ypos; // reversed since y-coordinates go from bottom to top
+		app->camera.ProcessMouseMovement(xoffset, yoffset, false);
 	}
+	app->lastX = xpos;
+	app->lastY = ypos;
 }
 
 void Renderer::mouseClickCallback(GLFWwindow * window, int button, int action, int mods)
@@ -236,17 +238,11 @@ void Renderer::stopRotation() {
 
 UniformBufferObject Renderer::generateUniformData(float rotationX, float rotationY)
 {
-
 	UniformBufferObject ubo = {};
-	ubo.model *= glm::rotate(glm::mat4(), rotationX, glm::vec3(0.0f, 0.0f, 1.0f));
-	ubo.model *= glm::rotate(glm::mat4(), rotationY, glm::vec3(1.0f, 0.0f, 0.0f));
-	ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-	ubo.proj = glm::perspective(glm::radians(45.0f), swapChain.swapChainExtent.width / (float)swapChain.swapChainExtent.height, 0.1f, 10.0f);
-	ubo.lightPosition = glm::vec3(-30.0f, 30.0f, 30.0f);
-
+	ubo.view = camera.GetViewMatrix();
+	ubo.proj = glm::perspective(glm::radians(60.0f), swapChain.swapChainExtent.width / (float)swapChain.swapChainExtent.height, 0.1f, 10.0f);
+	ubo.lightPosition = glm::vec3(10, 10, 10);  
 	ubo.proj[1][1] *= -1;
-
-
 	return ubo;
 }
 
@@ -380,7 +376,7 @@ VulkanDebugCallback(
 	const char * layerPrefix,
 	const char * msg,
 	void * userData
-) 
+	)
 {
 	std::ostringstream stream;
 	//if (flags & VK_DEBUG_REPORT_INFORMATION_BIT_EXT) { stream << "[Info]" << msg << std::endl; }
@@ -409,7 +405,7 @@ void Renderer::setupDebug()
 		VK_DEBUG_REPORT_ERROR_BIT_EXT |
 		VK_DEBUG_REPORT_DEBUG_BIT_EXT |
 		0;
-	
+
 	instanceLayers.push_back("VK_LAYER_LUNARG_standard_validation");
 
 	instanceExtensions.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);

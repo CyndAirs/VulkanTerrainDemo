@@ -15,7 +15,7 @@
 #include "BufferManager.h"
 #include "RendererInfo.h"
 #include "DeviceManager.h"
-
+#include "Camera.hpp"
 
 //#include "Window.h"
 
@@ -264,7 +264,14 @@ private:
 
 	bool mousePressed = false;
 
+	float forward, right;
+
 	double xpos = 0, ypos = 0, lastXpos = 0, lastYpos = 0;
+
+	Camera camera;
+	float lastX;
+	float lastY;
+	bool firstMouse = true;
 
 #if BUILD_ENABLE_VULKAN_DEBUG
 
