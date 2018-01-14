@@ -23,6 +23,7 @@ Renderer::Renderer(std::vector<Vertex> vertices, std::vector<uint32_t> indices, 
 	this->indices = indices;
 	this->textureSource = textureSource;
 	camera = Camera(glm::vec3(0.41f, -0.07f, 2.5f), glm::vec3(0, 1, 0), 270, 360);
+
 	firstMouse = true;
 }
 
@@ -106,6 +107,8 @@ void Renderer::mainLoop(HWND gui)
 	double fps;
 	std::string label;
 	std::wstring labeltemp;
+	std::string stateText;
+	std::wstring stateTextTemp;
 
 	label = "Vertices: " + std::to_string(vertices.size());
 	labeltemp = std::wstring(label.begin(), label.end());
@@ -123,6 +126,7 @@ void Renderer::mainLoop(HWND gui)
 	start = std::chrono::system_clock::now();
 	loopStart = std::chrono::system_clock::now();
 
+	camera.SetProjectionMatrix(glm::perspective(glm::radians(60.0f), swapChain.swapChainExtent.width / (float)swapChain.swapChainExtent.height, 0.1f, 10.0f));
 
 	while (!glfwWindowShouldClose(window)) {
 
@@ -152,10 +156,15 @@ void Renderer::mainLoop(HWND gui)
 			SetDlgItemText(gui, FPS_LABEL, (LPCWSTR)labeltemp.c_str());
 
 			start = std::chrono::system_clock::now();
+
+			stateText = "State: " + std::string(state == FLOATING ? "Flying" : "Editing");
+
+			stateTextTemp = std::wstring(stateText.begin(), stateText.end());
+
+			SetDlgItemText(gui, INFO_LABEL, (LPCWSTR)stateTextTemp.c_str());
+			SetDlgItemText(gui, VERTICES_LABEL, (LPCWSTR)testTemp.c_str());
 		}
-
 	}
-
 	vkDeviceWaitIdle(deviceManager.getDevice());
 }
 
@@ -188,12 +197,10 @@ void Renderer::keyCallback(GLFWwindow* window, int key, int scancode, int action
 		app->up = 0;
 }
 
-
-
 void Renderer::cursorPosCallback(GLFWwindow * window, double xpos, double ypos)
 {
 	Renderer* app = reinterpret_cast<Renderer*>(glfwGetWindowUserPointer(window));
-	if (app->mousePressed)
+	if (app->mousePressed && app->state == FLOATING)
 	{
 		if (app->firstMouse)
 		{
@@ -206,8 +213,24 @@ void Renderer::cursorPosCallback(GLFWwindow * window, double xpos, double ypos)
 		float yoffset = app->lastY - ypos; // reversed since y-coordinates go from bottom to top
 		app->camera.ProcessMouseMovement(xoffset, yoffset, false);
 	}
+	else if (app->mousePressed)
+	{
+		app->ProcessClick(xpos, ypos);
+	}
 	app->lastX = xpos;
 	app->lastY = ypos;
+}
+
+void Renderer::ProcessClick(double xpos, double ypos)
+{
+	//Tutaj obs³uga klikniecia w trybie edycji
+	Renderer* app = reinterpret_cast<Renderer*>(glfwGetWindowUserPointer(window));
+	float normalizedXpos = xpos / swapChain.swapChainExtent.width;
+	float normalizedYpos = ypos / swapChain.swapChainExtent.height;
+	glm::vec4 viewport = glm::vec4(0.0f, 0.0f, swapChain.swapChainExtent.width, swapChain.swapChainExtent.height);
+	glm::vec3 unproj = glm::unProject(glm::vec3(xpos, ypos ,10.f), glm::mat4(1.0f)*camera.GetViewMatrix(), camera.GetProjectionMatrix(), viewport);
+	test = std::to_string(unproj.x) + ", " + std::to_string(unproj.y) + ", " + std::to_string(unproj.x);
+	testTemp = std::wstring(test.begin(), test.end());
 }
 
 void Renderer::mouseClickCallback(GLFWwindow * window, int button, int action, int mods)
@@ -221,6 +244,14 @@ void Renderer::mouseClickCallback(GLFWwindow * window, int button, int action, i
 	{
 		Renderer* app = reinterpret_cast<Renderer*>(glfwGetWindowUserPointer(window));
 		app->mousePressed = false;
+	}
+	if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
+	{
+		Renderer* app = reinterpret_cast<Renderer*>(glfwGetWindowUserPointer(window));
+		if (app->state == FLOATING)
+			app->state = EDITING;
+		else
+			app->state = FLOATING;
 	}
 }
 
@@ -248,7 +279,7 @@ UniformBufferObject Renderer::generateUniformData(float rotationX, float rotatio
 {
 	UniformBufferObject ubo = {};
 	ubo.view = camera.GetViewMatrix();
-	ubo.proj = glm::perspective(glm::radians(60.0f), swapChain.swapChainExtent.width / (float)swapChain.swapChainExtent.height, 0.1f, 10.0f);
+	ubo.proj = camera.GetProjectionMatrix();
 	ubo.lightPosition = glm::vec3(10, 10, 10);  
 	ubo.proj[1][1] *= -1;
 	return ubo;

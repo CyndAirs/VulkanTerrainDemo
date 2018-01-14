@@ -86,6 +86,8 @@ public:
 	*/
 	static void cursorPosCallback(GLFWwindow* window, double xpos, double ypos);
 
+	void ProcessClick(double xpos, double ypos);
+
 	static void mouseClickCallback(GLFWwindow* window, int button, int action, int mods);
 
 	/**
@@ -272,6 +274,17 @@ private:
 	float lastX;
 	float lastY;
 	bool firstMouse = true;
+
+	std::string test = std::string();
+	std::wstring testTemp = std::wstring();
+
+	enum AppState
+	{
+		FLOATING,
+		EDITING
+	};
+
+	AppState state = FLOATING;
 
 #if BUILD_ENABLE_VULKAN_DEBUG
 
