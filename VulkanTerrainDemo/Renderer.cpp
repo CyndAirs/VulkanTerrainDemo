@@ -195,6 +195,14 @@ void Renderer::keyCallback(GLFWwindow* window, int key, int scancode, int action
 		app->up = 1;
 	if (key == GLFW_KEY_Q && action == GLFW_RELEASE)
 		app->up = 0;
+	if (key == GLFW_KEY_F && action == GLFW_RELEASE)
+		app->changeVertexHeightByValue(0, 0.1);
+}
+
+void Renderer::changeVertexHeightByValue(int index, double value) {
+	vertices[0].pos.z += 0.1;
+	swapChain.recreateSwapChain();		
+	bufferManager.updateVertices(vertices);
 }
 
 void Renderer::cursorPosCallback(GLFWwindow * window, double xpos, double ypos)

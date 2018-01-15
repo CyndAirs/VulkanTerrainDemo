@@ -78,6 +78,8 @@ public:
 	*/
 	static void keyCallback(GLFWwindow * window, int key, int scancode, int action, int mods);
 
+	void changeVertexHeightByValue(int index, double value);
+
 	/**
 	* GLFW callback for cursor position change
 	* @param window application window

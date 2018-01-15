@@ -59,6 +59,8 @@ public:
 	 */
 	void initBuffer(VkDeviceSize size, VkBufferUsageFlags bufferUsage, VkMemoryPropertyFlags memoryProperties, VulkanDeleter<VkBuffer>& buffer, VulkanDeleter<VkDeviceMemory>& bufferMemory);
 
+	void updateVertices(std::vector<Vertex> vertices);
+
 	
 	/**
 	 * Initialises vertex buffer

@@ -74,6 +74,15 @@ void BufferManager::initBuffer(VkDeviceSize size, VkBufferUsageFlags bufferUsage
 	ErrorCheck(vkBindBufferMemory(renderer.device, buffer, bufferMemory, 0));
 }
 
+void BufferManager::updateVertices(std::vector<Vertex> vertices)
+{
+	renderer.vertices = vertices;
+
+	initVertexBuffer();
+
+	initCommandBuffers();
+}
+
 
 void BufferManager::initVertexBuffer()
 {
