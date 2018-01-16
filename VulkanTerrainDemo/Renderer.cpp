@@ -22,7 +22,7 @@ Renderer::Renderer(std::vector<Vertex> vertices, std::vector<uint32_t> indices, 
 	this->vertices = vertices;
 	this->indices = indices;
 	this->textureSource = textureSource;
-	camera = Camera(glm::vec3(0.41f, -0.07f, 2.5f), glm::vec3(0, 1, 0), 270, 360);
+	camera = Camera(glm::vec3(0.0f, 0.0f, 2.5f), glm::vec3(0, 1, 0), 270, 0);
 
 	firstMouse = true;
 }
@@ -200,7 +200,6 @@ void Renderer::keyCallback(GLFWwindow* window, int key, int scancode, int action
 }
 
 void Renderer::changeVertexHeightByValue(int index, double value) {
-	vertices[0].pos.z += 0.1;
 	swapChain.recreateSwapChain();		
 	bufferManager.updateVertices(vertices);
 }
@@ -227,6 +226,12 @@ void Renderer::cursorPosCallback(GLFWwindow * window, double xpos, double ypos)
 	}
 	app->lastX = xpos;
 	app->lastY = ypos;
+	app->ProcessClick(xpos, ypos);
+}
+
+bool near_equal(float a, float b, float epsilon)
+{
+	return (std::abs(a - b) < epsilon);
 }
 
 void Renderer::ProcessClick(double xpos, double ypos)
@@ -235,32 +240,45 @@ void Renderer::ProcessClick(double xpos, double ypos)
 	Renderer* app = reinterpret_cast<Renderer*>(glfwGetWindowUserPointer(window));
 	float normalizedXpos = xpos / swapChain.swapChainExtent.width;
 	float normalizedYpos = ypos / swapChain.swapChainExtent.height;
+	
 	glm::vec4 viewport = glm::vec4(0.0f, 0.0f, swapChain.swapChainExtent.width, swapChain.swapChainExtent.height);
-	glm::vec3 unproj = glm::unProject(glm::vec3(xpos, ypos ,10.f), glm::mat4(1.0f)*camera.GetViewMatrix(), camera.GetProjectionMatrix(), viewport);
+	glm::vec3 unproj = glm::unProject(glm::vec3(xpos, ypos, 0.5f), glm::mat4(1.0f)*camera.GetViewMatrix(), camera.GetProjectionMatrix(), viewport);
 	test = std::to_string(unproj.x) + ", " + std::to_string(unproj.y) + ", " + std::to_string(unproj.x);
 	testTemp = std::wstring(test.begin(), test.end());
+	for (auto& ver : app->vertices)
+	{
+		if (near_equal(unproj.x,ver.pos.x/10.0f,0.01f) && near_equal(-unproj.y, ver.pos.y / 10.0f, 0.01f)) {
+			ver.color[1] = ver.color[2] = 0.0f;
+		}
+		else
+		{
+			ver.color[1] = ver.color[2] = 1.0f;
+		}
+	}
+	app->changeVertexHeightByValue(0, 0.0f);
 }
 
 void Renderer::mouseClickCallback(GLFWwindow * window, int button, int action, int mods)
 {
+	Renderer* app = reinterpret_cast<Renderer*>(glfwGetWindowUserPointer(window));
 	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
 	{
-		Renderer* app = reinterpret_cast<Renderer*>(glfwGetWindowUserPointer(window));
 		app->mousePressed = true;
+		app->state = FLOATING;
 	}
 	else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE)
 	{
-		Renderer* app = reinterpret_cast<Renderer*>(glfwGetWindowUserPointer(window));
 		app->mousePressed = false;
+		app->state = FLOATING;
 	}
 	if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
 	{
-		Renderer* app = reinterpret_cast<Renderer*>(glfwGetWindowUserPointer(window));
-		if (app->state == FLOATING)
-			app->state = EDITING;
-		else
-			app->state = FLOATING;
+		app->mousePressed = true;
+		app->state = EDITING;
+		app->ProcessClick(app->lastX, app->lastY);
 	}
+	else if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE)
+		app->mousePressed = false;
 }
 
 bool Renderer::getRotateLeft() {
