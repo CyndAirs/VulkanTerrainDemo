@@ -171,39 +171,45 @@ void Renderer::mainLoop(HWND gui)
 void Renderer::keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
 	Renderer* app = reinterpret_cast<Renderer*>(glfwGetWindowUserPointer(window));
-	if ((key == GLFW_KEY_D || key == GLFW_KEY_RIGHT) && action == GLFW_RELEASE)
-		app->right = 0;
-	if ((key == GLFW_KEY_A || key == GLFW_KEY_LEFT) && action == GLFW_RELEASE)
-		app->right = 0;
-	if ((key == GLFW_KEY_D || key == GLFW_KEY_RIGHT) && action == GLFW_PRESS)
-		app->right = 1;
-	if ((key == GLFW_KEY_A || key == GLFW_KEY_LEFT) && action == GLFW_PRESS)
-		app->right = -1;
-	if ((key == GLFW_KEY_W || key == GLFW_KEY_UP) && action == GLFW_RELEASE)
-		app->forward = 0;
-	if ((key == GLFW_KEY_S || key == GLFW_KEY_DOWN) && action == GLFW_RELEASE)
-		app->forward = 0;
-	if ((key == GLFW_KEY_W || key == GLFW_KEY_UP) && action == GLFW_PRESS)
-		app->forward = 1;
-	if ((key == GLFW_KEY_S || key == GLFW_KEY_DOWN) && action == GLFW_PRESS)
-		app->forward = -1;
-	if (key == GLFW_KEY_E && action == GLFW_PRESS)
-		app->up = -1;
-	if (key == GLFW_KEY_E && action == GLFW_RELEASE)
-		app->up = 0;
-	if (key == GLFW_KEY_Q && action == GLFW_PRESS)
-		app->up = 1;
-	if (key == GLFW_KEY_Q && action == GLFW_RELEASE)
-		app->up = 0;
-
+	if (app->state == FLOATING)
+	{
+		if ((key == GLFW_KEY_D || key == GLFW_KEY_RIGHT) && action == GLFW_RELEASE)
+			app->right = 0;
+		if ((key == GLFW_KEY_A || key == GLFW_KEY_LEFT) && action == GLFW_RELEASE)
+			app->right = 0;
+		if ((key == GLFW_KEY_D || key == GLFW_KEY_RIGHT) && action == GLFW_PRESS)
+			app->right = 1;
+		if ((key == GLFW_KEY_A || key == GLFW_KEY_LEFT) && action == GLFW_PRESS)
+			app->right = -1;
+		if ((key == GLFW_KEY_W || key == GLFW_KEY_UP) && action == GLFW_RELEASE)
+			app->forward = 0;
+		if ((key == GLFW_KEY_S || key == GLFW_KEY_DOWN) && action == GLFW_RELEASE)
+			app->forward = 0;
+		if ((key == GLFW_KEY_W || key == GLFW_KEY_UP) && action == GLFW_PRESS)
+			app->forward = 1;
+		if ((key == GLFW_KEY_S || key == GLFW_KEY_DOWN) && action == GLFW_PRESS)
+			app->forward = -1;
+		if (key == GLFW_KEY_E && action == GLFW_PRESS)
+			app->up = -1;
+		if (key == GLFW_KEY_E && action == GLFW_RELEASE)
+			app->up = 0;
+		if (key == GLFW_KEY_Q && action == GLFW_PRESS)
+			app->up = 1;
+		if (key == GLFW_KEY_Q && action == GLFW_RELEASE)
+			app->up = 0;
+	}
 	if (key == GLFW_KEY_PAGE_UP && action == GLFW_PRESS)
-		app->editStrength += 0.01f;
+		if(app->editStrength < 1.0f)
+			app->editStrength += 0.01f;
 	if (key == GLFW_KEY_PAGE_DOWN && action == GLFW_PRESS)
-		app->editStrength -= 0.01f;
+		if (app->editStrength > 0.01f)
+			app->editStrength -= 0.01f;
 	if (key == GLFW_KEY_KP_ADD && action == GLFW_PRESS)
-		app->editingSize += 0.01f;
+		if(app->editingSize < 0.1f)
+			app->editingSize += 0.01f;
 	if (key == GLFW_KEY_KP_SUBTRACT && action == GLFW_PRESS)
-		app->editingSize -= 0.01f;
+		if (app->editingSize > 0.01f)
+			app->editingSize -= 0.01f;
 
 	if (key == GLFW_KEY_F && action == GLFW_RELEASE)
 	{
