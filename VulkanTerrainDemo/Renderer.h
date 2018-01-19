@@ -46,7 +46,8 @@ public:
 	* Default contructor initialises object with default values for vertices and indces 
 	*/
 	Renderer();
-
+	float editStrength = 0.01f;
+	float editingSize = 0.01f;
 	/** 
 	* Contructor initialises object with given values for vertices and indices 
 	* @param vertices vector with generated model vertices
@@ -78,7 +79,7 @@ public:
 	*/
 	static void keyCallback(GLFWwindow * window, int key, int scancode, int action, int mods);
 
-	void changeVertexHeightByValue(int index, double value);
+	void refreshVertises();
 
 	/**
 	* GLFW callback for cursor position change
@@ -89,9 +90,9 @@ public:
 	static void cursorPosCallback(GLFWwindow* window, double xpos, double ypos);
 
 	void ProcessClick(double xpos, double ypos);
-
+	void EditingHeights(double xpos, double ypos);
 	static void mouseClickCallback(GLFWwindow* window, int button, int action, int mods);
-
+	void clearVertisesColor();
 	/**
 	* Checks model rotation
 	* @returns true if model is rotating to th left
@@ -283,7 +284,8 @@ private:
 	enum AppState
 	{
 		FLOATING,
-		EDITING
+		EDITING_RISE,
+		EDITING_FALL
 	};
 
 	AppState state = FLOATING;

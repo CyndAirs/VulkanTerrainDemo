@@ -195,13 +195,69 @@ void Renderer::keyCallback(GLFWwindow* window, int key, int scancode, int action
 		app->up = 1;
 	if (key == GLFW_KEY_Q && action == GLFW_RELEASE)
 		app->up = 0;
-	if (key == GLFW_KEY_F && action == GLFW_RELEASE)
-		app->changeVertexHeightByValue(0, 0.1);
-}
 
-void Renderer::changeVertexHeightByValue(int index, double value) {
+	if (key == GLFW_KEY_PAGE_UP && action == GLFW_PRESS)
+		app->editStrength += 0.01f;
+	if (key == GLFW_KEY_PAGE_DOWN && action == GLFW_PRESS)
+		app->editStrength -= 0.01f;
+	if (key == GLFW_KEY_KP_ADD && action == GLFW_PRESS)
+		app->editingSize += 0.01f;
+	if (key == GLFW_KEY_KP_SUBTRACT && action == GLFW_PRESS)
+		app->editingSize -= 0.01f;
+
+	if (key == GLFW_KEY_F && action == GLFW_RELEASE)
+	{
+		if (app->state == FLOATING)
+		{
+			app->state = EDITING_RISE;
+			app->camera.resetCameraToEditorMode();
+		}
+		else {
+			app->state = FLOATING;
+			app->clearVertisesColor();
+		}
+	}
+}
+void Renderer::clearVertisesColor()
+{
+	Renderer* app = reinterpret_cast<Renderer*>(glfwGetWindowUserPointer(window));
+	for (auto& ver : app->vertices)
+	{
+		ver.color[1] = ver.color[2] = 1.0f;
+	}
+	app->refreshVertises();
+}
+void Renderer::refreshVertises() {
 	swapChain.recreateSwapChain();		
 	bufferManager.updateVertices(vertices);
+}
+
+bool near_equal(float a, float b, float epsilon)
+{
+	return (std::abs(a - b) < epsilon);
+}
+
+void Renderer::EditingHeights(double xpos, double ypos)
+{
+	Renderer* app = reinterpret_cast<Renderer*>(glfwGetWindowUserPointer(window));
+	float normalizedXpos = xpos / swapChain.swapChainExtent.width;
+	float normalizedYpos = ypos / swapChain.swapChainExtent.height;
+
+	glm::vec4 viewport = glm::vec4(0.0f, 0.0f, swapChain.swapChainExtent.width, swapChain.swapChainExtent.height);
+	glm::vec3 unproj = glm::unProject(glm::vec3(xpos, ypos, 0.5f), glm::mat4(1.0f)*camera.GetViewMatrix(), camera.GetProjectionMatrix(), viewport);
+	test = std::to_string(unproj.x) + ", " + std::to_string(unproj.y) + ", " + std::to_string(unproj.x);
+	testTemp = std::wstring(test.begin(), test.end());
+	for (auto& ver : app->vertices)
+	{
+		if (near_equal(unproj.x, ver.pos.x / 10.0f, app->editingSize) && near_equal(-unproj.y, ver.pos.y / 10.0f, app->editingSize)) {
+			ver.color[1] = ver.color[2] = 0.0f;
+		}
+		else
+		{
+			ver.color[1] = ver.color[2] = 1.0f;
+		}
+	}
+	app->refreshVertises();
 }
 
 void Renderer::cursorPosCallback(GLFWwindow * window, double xpos, double ypos)
@@ -220,18 +276,14 @@ void Renderer::cursorPosCallback(GLFWwindow * window, double xpos, double ypos)
 		float yoffset = app->lastY - ypos; // reversed since y-coordinates go from bottom to top
 		app->camera.ProcessMouseMovement(xoffset, yoffset, false);
 	}
-	else if (app->mousePressed)
+	/*else if (app->mousePressed)
 	{
 		app->ProcessClick(xpos, ypos);
-	}
+	}*/
+	else if (!app->mousePressed && (app->state != FLOATING))
+		app->EditingHeights(xpos, ypos);
 	app->lastX = xpos;
 	app->lastY = ypos;
-	app->ProcessClick(xpos, ypos);
-}
-
-bool near_equal(float a, float b, float epsilon)
-{
-	return (std::abs(a - b) < epsilon);
 }
 
 void Renderer::ProcessClick(double xpos, double ypos)
@@ -247,15 +299,14 @@ void Renderer::ProcessClick(double xpos, double ypos)
 	testTemp = std::wstring(test.begin(), test.end());
 	for (auto& ver : app->vertices)
 	{
-		if (near_equal(unproj.x,ver.pos.x/10.0f,0.01f) && near_equal(-unproj.y, ver.pos.y / 10.0f, 0.01f)) {
-			ver.color[1] = ver.color[2] = 0.0f;
-		}
-		else
-		{
-			ver.color[1] = ver.color[2] = 1.0f;
+		if (near_equal(unproj.x,ver.pos.x/10.0f, app->editingSize) && near_equal(-unproj.y, ver.pos.y / 10.0f, app->editingSize)) {
+			if(app->state == EDITING_RISE)
+				ver.pos.z += app->editStrength;
+			else
+				ver.pos.z -= app->editStrength;
 		}
 	}
-	app->changeVertexHeightByValue(0, 0.0f);
+	app->refreshVertises();
 }
 
 void Renderer::mouseClickCallback(GLFWwindow * window, int button, int action, int mods)
@@ -264,18 +315,25 @@ void Renderer::mouseClickCallback(GLFWwindow * window, int button, int action, i
 	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
 	{
 		app->mousePressed = true;
-		app->state = FLOATING;
+		if (app->state != FLOATING)
+		{
+			app->ProcessClick(app->lastX, app->lastY);
+		}
 	}
 	else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE)
 	{
 		app->mousePressed = false;
-		app->state = FLOATING;
 	}
 	if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
 	{
 		app->mousePressed = true;
-		app->state = EDITING;
-		app->ProcessClick(app->lastX, app->lastY);
+		if (app->state != FLOATING)
+		{
+			if (app->state == EDITING_RISE)
+				app->state = EDITING_FALL;
+			else
+				app->state = EDITING_RISE;
+		}
 	}
 	else if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE)
 		app->mousePressed = false;
