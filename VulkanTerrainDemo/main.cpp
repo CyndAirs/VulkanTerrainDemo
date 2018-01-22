@@ -1,6 +1,5 @@
 
 #include "Shared.h"
-
 #include "Renderer.h"
 
 #include <stdio.h>

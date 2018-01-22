@@ -48,7 +48,11 @@ void Renderer::initWindow()
 	//glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
 	window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Vulkan Terrain Demo", nullptr, nullptr);
-
+	winApiWindow = glfwGetWin32Window(window);
+	uiLabel = CreateWindowEx(0, L"EDIT",
+		L"Controls:\r\nPress W/S to go forward/backward\r\nPress A/D to go left/right\r\nUse Mouse to look around\r\nPress F to go into edit mode\r\nPress K to go into coloring mode",
+		ES_READONLY | ES_MULTILINE | WS_CHILD | WS_VISIBLE, 0, 0, 300, 115, winApiWindow, (HMENU)0, GetModuleHandle(NULL), NULL);
+	UpdateWindow(winApiWindow);
 	glfwSetWindowUserPointer(window, this);
 	glfwSetWindowSizeCallback(window, Renderer::onWindowResized);
 }
@@ -202,36 +206,55 @@ void Renderer::keyCallback(GLFWwindow* window, int key, int scancode, int action
 
 	if (app->state == COLORING)
 	{
-		if (key == GLFW_KEY_1 && action == GLFW_RELEASE)
+		if (key == GLFW_KEY_1 && action == GLFW_RELEASE) {
 			app->currentColor = RED;
-		if (key == GLFW_KEY_2 && action == GLFW_RELEASE)
+			SetWindowText(app->uiLabel, L"COLORING MODE\r\nControls:\r\nUse 1/2/3 to switch between red/green/blue\r\nUse Mouse to color terrain\r\nPress K to exit coloring mode\r\nCURRENT COLOR: RED");
+		}
+		if (key == GLFW_KEY_2 && action == GLFW_RELEASE) {
 			app->currentColor = GREEN;
-		if (key == GLFW_KEY_3 && action == GLFW_RELEASE)
+			SetWindowText(app->uiLabel, L"COLORING MODE\r\nControls:\r\nUse 1/2/3 to switch between red/green/blue\r\nUse Mouse to color terrain\r\nPress K to exit coloring mode\r\nCURRENT COLOR: GREEN");
+		}
+		if (key == GLFW_KEY_3 && action == GLFW_RELEASE) {
 			app->currentColor = BLUE;
+			SetWindowText(app->uiLabel, L"COLORING MODE\r\nControls:\r\nUse 1/2/3 to switch between red/green/blue\r\nUse Mouse to color terrain\r\nPress K to exit coloring mode\r\nCURRENT COLOR: BLUE");
+		}
 	}
-
-	if (key == GLFW_KEY_PAGE_UP && action == GLFW_RELEASE)
-		if(app->editStrength < 1.0f)
-			app->editStrength += 0.01f;
-	if (key == GLFW_KEY_PAGE_DOWN && action == GLFW_RELEASE)
-		if (app->editStrength > 0.01f)
-			app->editStrength -= 0.01f;
-	if (key == GLFW_KEY_KP_ADD && action == GLFW_RELEASE)
-		if(app->editingSize < 0.1f)
-			app->editingSize += 0.01f;
-	if (key == GLFW_KEY_KP_SUBTRACT && action == GLFW_RELEASE)
-		if (app->editingSize > 0.01f)
-			app->editingSize -= 0.01f;
+	if (app->state != FLOATING)
+	{
+		if (key == GLFW_KEY_PAGE_UP && action == GLFW_RELEASE)
+			if (app->editStrength < 1.0f) {
+				app->editStrength += 0.01f;
+				app->SetEditingLabel();
+			}
+		if (key == GLFW_KEY_PAGE_DOWN && action == GLFW_RELEASE)
+			if (app->editStrength > 0.01f) {
+				app->editStrength -= 0.01f;
+				app->SetEditingLabel();
+			}
+		if (key == GLFW_KEY_KP_ADD && action == GLFW_RELEASE)
+			if (app->editingSize < 0.1f) {
+				app->editingSize += 0.01f;
+				app->SetEditingLabel();
+			}
+		if (key == GLFW_KEY_KP_SUBTRACT && action == GLFW_RELEASE)
+			if (app->editingSize > 0.01f) {
+				app->editingSize -= 0.01f;
+				app->SetEditingLabel();
+			}
+	}
 	if (key == GLFW_KEY_K && action == GLFW_RELEASE)
 	{
 		if (app->state != COLORING)
 		{
 			app->state = COLORING;
+			app->currentColor = RED;
 			app->camera.resetCameraToEditorMode();
+			SetWindowText(app->uiLabel, L"COLORING MODE\r\nControls:\r\nUse 1/2/3 to switch between red/green/blue\r\nUse Mouse to color terrain\r\nPress K to exit coloring mode\r\nCURRENT COLOR: RED");
 		}
 		else
 		{
 			app->state = FLOATING;
+			SetWindowText(app->uiLabel, L"Controls:\r\nPress W/S to go forward/backward\r\nPress A/D to go left/right\r\nUse Mouse to look around\r\nPress F to go into edit mode\r\nPress K to go into coloring mode");
 			app->clearVertisesColor();
 		}
 	}
@@ -240,14 +263,28 @@ void Renderer::keyCallback(GLFWwindow* window, int key, int scancode, int action
 		if (app->state == FLOATING)
 		{
 			app->state = EDITING_RISE;
+			app->editStrength = 0.01f;
+			app->editingSize = 0.01f;
+			SetWindowText(app->uiLabel, L"EDITING MODE\r\nControls:\r\nUse Left / Right Mouse Button to rise / lower\r\nUse PgUp / PgDn to change strength\r\nUse Num + / Num - to change size\r\nCURRENT SIZE : 0.01\r\nCURRENT STRENGTH : 0.01");
 			app->camera.resetCameraToEditorMode();
 		}
 		else {
 			app->state = FLOATING;
+			SetWindowText(app->uiLabel, L"Controls:\r\nPress W/S to go forward/backward\r\nPress A/D to go left/right\r\nUse Mouse to look around\r\nPress F to go into edit mode\r\nPress K to go into coloring mode");
 			app->clearVertisesColor();
 		}
 	}
 }
+
+void Renderer::SetEditingLabel()
+{
+	std::string editStr = std::to_string(this->editStrength);
+	std::string editSize = std::to_string(this->editingSize);
+	std::string label = "EDITING MODE\r\nControls:\r\nUse Left / Right Mouse Button to rise / lower\r\nUse PgUp / PgDn to change strength\r\nUse Num + / Num - to change size\r\nCURRENT SIZE : " + editSize.substr(0, 4) + "\r\nCURRENT STRENGTH : " + editStr.substr(0, 4);
+	std::wstring wLabel(label.begin(), label.end());
+	SetWindowText(this->uiLabel, wLabel.c_str());
+}
+
 void Renderer::clearVertisesColor()
 {
 	Renderer* app = reinterpret_cast<Renderer*>(glfwGetWindowUserPointer(window));
@@ -258,7 +295,7 @@ void Renderer::clearVertisesColor()
 	app->refreshVertises();
 }
 void Renderer::refreshVertises() {
-	swapChain.recreateSwapChain();		
+	swapChain.recreateSwapChain();
 	bufferManager.updateVertices(vertices);
 }
 
@@ -277,7 +314,7 @@ void Renderer::EditingHeights(double xpos, double ypos)
 	glm::vec3 unproj = glm::unProject(glm::vec3(xpos, ypos, 0.5f), glm::mat4(1.0f)*camera.GetViewMatrix(), camera.GetProjectionMatrix(), viewport);
 	test = std::to_string(unproj.x) + ", " + std::to_string(unproj.y) + ", " + std::to_string(unproj.x);
 	testTemp = std::wstring(test.begin(), test.end());
-	for (int i =0; i < app->vertices.size(); i++)
+	for (int i = 0; i < app->vertices.size(); i++)
 	{
 		if (near_equal(unproj.x, app->vertices[i].pos.x / 10.0f, app->editingSize) && near_equal(-unproj.y, app->vertices[i].pos.y / 10.0f, app->editingSize)) {
 			if (app->state != COLORING)
@@ -328,22 +365,22 @@ void Renderer::cursorPosCallback(GLFWwindow * window, double xpos, double ypos)
 	app->lastY = ypos;
 }
 
-void Renderer::ProcessClick(double xpos, double ypos)
+void Renderer::ProcessClick(double xpos, double ypos, bool rise)
 {
 	//Tutaj obs³uga klikniecia w trybie edycji
 	Renderer* app = reinterpret_cast<Renderer*>(glfwGetWindowUserPointer(window));
 	float normalizedXpos = xpos / swapChain.swapChainExtent.width;
 	float normalizedYpos = ypos / swapChain.swapChainExtent.height;
-	
+
 	glm::vec4 viewport = glm::vec4(0.0f, 0.0f, swapChain.swapChainExtent.width, swapChain.swapChainExtent.height);
 	glm::vec3 unproj = glm::unProject(glm::vec3(xpos, ypos, 0.5f), glm::mat4(1.0f)*camera.GetViewMatrix(), camera.GetProjectionMatrix(), viewport);
 	test = std::to_string(unproj.x) + ", " + std::to_string(unproj.y) + ", " + std::to_string(unproj.x);
 	testTemp = std::wstring(test.begin(), test.end());
 	for (int i = 0; i < app->vertices.size(); i++)
 	{
-		if (near_equal(unproj.x, app->vertices[i].pos.x/10.0f, app->editingSize) && near_equal(-unproj.y, app->vertices[i].pos.y / 10.0f, app->editingSize)) {
+		if (near_equal(unproj.x, app->vertices[i].pos.x / 10.0f, app->editingSize) && near_equal(-unproj.y, app->vertices[i].pos.y / 10.0f, app->editingSize)) {
 			if (app->state != COLORING)
-				if (app->state == EDITING_RISE)
+				if (rise)
 					app->vertices[i].pos.z += app->editStrength;
 				else
 					app->vertices[i].pos.z -= app->editStrength;
@@ -356,21 +393,21 @@ void Renderer::ProcessClick(double xpos, double ypos)
 					{
 						app->verticesColors[i].g = app->verticesColors[i].b = 0.0f;
 					}
-						app->verticesColors[i].r = 1.0f;
+					app->verticesColors[i].r = 1.0f;
 					break;
 				case GREEN:
 					if (app->verticesColors[i] == glm::vec3({ 1, 1, 1 }))
 					{
 						app->verticesColors[i].r = app->verticesColors[i].b = 0.0f;
 					}
-						app->verticesColors[i].g = 1.0f;
+					app->verticesColors[i].g = 1.0f;
 					break;
 				case BLUE:
 					if (app->verticesColors[i] == glm::vec3({ 1, 1, 1 }))
 					{
 						app->verticesColors[i].r = app->verticesColors[i].g = 0.0f;
 					}
-						app->verticesColors[i].b = 1.0f;
+					app->verticesColors[i].b = 1.0f;
 					break;
 				}
 				app->vertices[i].color = app->verticesColors[i];
@@ -388,7 +425,7 @@ void Renderer::mouseClickCallback(GLFWwindow * window, int button, int action, i
 		app->mousePressed = true;
 		if (app->state != FLOATING)
 		{
-			app->ProcessClick(app->lastX, app->lastY);
+			app->ProcessClick(app->lastX, app->lastY, true);
 		}
 	}
 	else if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE)
@@ -398,12 +435,9 @@ void Renderer::mouseClickCallback(GLFWwindow * window, int button, int action, i
 	if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
 	{
 		app->mousePressed = true;
-		if (app->state != FLOATING)
+		if (app->state == EDITING_RISE)
 		{
-			if (app->state == EDITING_RISE)
-				app->state = EDITING_FALL;
-			else
-				app->state = EDITING_RISE;
+			app->ProcessClick(app->lastX, app->lastY, false);
 		}
 	}
 	else if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE)
@@ -435,7 +469,7 @@ UniformBufferObject Renderer::generateUniformData(float rotationX, float rotatio
 	UniformBufferObject ubo = {};
 	ubo.view = camera.GetViewMatrix();
 	ubo.proj = camera.GetProjectionMatrix();
-	ubo.lightPosition = glm::vec3(10, 10, 10);  
+	ubo.lightPosition = glm::vec3(10, 10, 10);
 	ubo.proj[1][1] *= -1;
 	return ubo;
 }

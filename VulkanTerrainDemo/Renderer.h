@@ -79,6 +79,8 @@ public:
 	*/
 	static void keyCallback(GLFWwindow * window, int key, int scancode, int action, int mods);
 
+	void SetEditingLabel();
+
 	void refreshVertises();
 
 	/**
@@ -89,7 +91,7 @@ public:
 	*/
 	static void cursorPosCallback(GLFWwindow* window, double xpos, double ypos);
 
-	void ProcessClick(double xpos, double ypos);
+	void ProcessClick(double xpos, double ypos, bool rise);
 	void EditingHeights(double xpos, double ypos);
 	static void mouseClickCallback(GLFWwindow* window, int button, int action, int mods);
 	void clearVertisesColor();
@@ -299,6 +301,9 @@ private:
 	};
 	TerrainColor currentColor = RED;
 	AppState state = FLOATING;
+	public:
+	HWND uiLabel;
+	HWND winApiWindow;
 
 #if BUILD_ENABLE_VULKAN_DEBUG
 
