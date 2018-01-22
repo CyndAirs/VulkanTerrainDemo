@@ -3,6 +3,7 @@
 #ifndef STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
+#include <stb_image_write.h>
 #endif
 
 Image::Image(std::string path, ImageType type)
@@ -18,6 +19,26 @@ Image::Image(std::string path, ImageType type)
 	if (!pixels) {
 		throw std::runtime_error("Failed to load texture image!");
 	}
+
+	this->type = type;
+}
+
+Image::Image(std::vector<unsigned char> pixels, int w, int h)
+{
+	monochrome = pixels;
+	int monochromeIndex = 0;
+	this->pixels = new unsigned char[w*h*3];
+	for (int i = 0; i < h; i++) {
+		for (int j = 0; j < w * 3; j += 3) {
+			this->pixels[i * w * 3 + j] = monochrome[monochromeIndex];
+			this->pixels[i * w * 3 + j + 1] = monochrome[monochromeIndex];
+			this->pixels[i * w * 3 + j + 2] = monochrome[monochromeIndex];
+			monochromeIndex++;
+		}
+	}
+	this->w = w;
+	this->h = h;
+	this->type = RGB;
 }
 
 Image::~Image()
@@ -46,4 +67,14 @@ std::vector<unsigned char> Image::toGreyScale()
 unsigned char * Image::getArray()
 {
 	return pixels;
+}
+
+void Image::saveToFile(std::string path)
+{
+	if (type == RGB) {
+		stbi_write_bmp(path.c_str(), w, h, STBI_rgb, pixels);
+	}
+	else {
+		stbi_write_bmp(path.c_str(), w, h, STBI_rgb_alpha, pixels);
+	}
 }

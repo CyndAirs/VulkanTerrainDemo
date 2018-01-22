@@ -28,6 +28,10 @@ HWND indicesLabel;
 /** Height map file path as string */
 std::string path;
 
+HeightMap * heightMap;
+
+Renderer * renderer;
+
 /** Generic WinApi window, with placed widgets */
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
@@ -52,7 +56,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		return EXIT_FAILURE;
 	}
 
-	mainWindow = CreateWindowEx(WS_EX_CLIENTEDGE, WINDOW, L"Vulkan Terrain Demo", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, 900, 400, NULL, NULL, hInstance, NULL);
+	mainWindow = CreateWindowEx(WS_EX_CLIENTEDGE, WINDOW, L"Vulkan Terrain Demo", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, 500, 400, NULL, NULL, hInstance, NULL);
 	if (!mainWindow)
 	{
 		MessageBox(NULL, L"Failed to create window.", L"Error", MB_ICONERROR | MB_OK);
@@ -94,7 +98,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	HWND applyButton = CreateWindowEx(0, L"BUTTON", L"RUN", WS_CHILD | WS_VISIBLE, 20, 270, 220, 30, mainWindow, (HMENU)APPLY_BUTTON, hInstance, NULL);
 
+	HWND saveButton = CreateWindowEx(0, L"BUTTON", L"Save As...", WS_CHILD | WS_VISIBLE, 20, 310, 220, 30, mainWindow, (HMENU)SAVE_BUTTON, hInstance, NULL);
+
 	EnableWindow(applyButton, FALSE);
+
+	EnableWindow(saveButton, FALSE);
 
 	ShowWindow(mainWindow, nCmdShow);
 	UpdateWindow(mainWindow);
@@ -181,18 +189,22 @@ LRESULT CALLBACK WndProc(HWND mainWindow, UINT msg, WPARAM wParam, LPARAM lParam
 			float ratio;
 			if (ratioH == 0) ratio = 0;
 			else ratio = (float)ratioW / (float)ratioH;
-			HeightMap heightMap(path, size, ratio, zScale);
-			Renderer renderer(heightMap.generateVertices(), heightMap.generateIndices(), TEXTURE_SOURCE);
-			float i = heightMap.getHeight(0, 0);
+			heightMap = new HeightMap(path, size, ratio, zScale);
+			renderer = new Renderer(heightMap->generateVertices(), heightMap->generateIndices(), TEXTURE_SOURCE);
+			float i = heightMap->getHeight(0, 0);
 			try {
-
-				renderer.run(mainWindow);
+				EnableWindow(GetDlgItem(mainWindow, APPLY_BUTTON), FALSE);
+				EnableWindow(GetDlgItem(mainWindow, SAVE_BUTTON), TRUE);
+				renderer->run(mainWindow);
 			}
 			catch (const std::runtime_error& e) {
 				MessageBox(NULL, LPCWSTR(e.what()), L"Error", MB_ICONERROR | MB_OK);
 				std::cerr << e.what() << std::endl;
 				return EXIT_FAILURE;
 			}
+
+			EnableWindow(GetDlgItem(mainWindow, APPLY_BUTTON), TRUE);
+			EnableWindow(GetDlgItem(mainWindow, SAVE_BUTTON), FALSE);
 
 			SetDlgItemText(mainWindow, INFO_LABEL, L"Stopped");
 			SetDlgItemText(mainWindow, FPS_LABEL, L"FPS: -");
@@ -202,6 +214,50 @@ LRESULT CALLBACK WndProc(HWND mainWindow, UINT msg, WPARAM wParam, LPARAM lParam
 
 			SetCursor(LoadCursor(NULL, IDC_ARROW));
 			break;
+		}
+		case SAVE_BUTTON: 
+		{
+			OPENFILENAME ofnSave;
+			ZeroMemory(&ofnSave, sizeof(ofnSave));
+			ofnSave.lStructSize = sizeof(ofnSave);
+			ofnSave.hwndOwner = mainWindow;
+			ofnSave.lpstrFile = new TCHAR[MAX_PATH];
+			ofnSave.lpstrFile[0] = '\0';
+
+			WCHAR initSavePath[MAX_PATH];
+			GetCurrentDirectory(MAX_PATH, initSavePath);
+			ofnSave.lpstrInitialDir = (LPCWSTR)initSavePath;
+
+			ofnSave.nMaxFile = MAX_PATH;
+
+			ofnSave.lpstrFilter = TEXT("BMP Files (*.bmp)\0*.bmp\0All Files (*.*)\0*.*\0");
+			ofnSave.nFilterIndex = 0;
+
+			ofnSave.Flags = OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT;
+
+			if (GetSaveFileName(&ofnSave)) {
+				
+				SetCursor(LoadCursor(NULL, IDC_WAIT));
+				
+				std::string outPath = CW2A(ofnSave.lpstrFile);
+
+				if (outPath.substr(outPath.length() - 4) != ".bmp" && outPath.substr(outPath.length() - 4) != ".BMP")
+					outPath += ".bmp";
+
+				SetCursor(LoadCursor(NULL, IDC_ARROW));
+				
+				heightMap->setVertices(renderer->getVertices());
+				
+				heightMap->saveAsImage(outPath);
+			}
+			else
+			{
+				break;
+			}
+
+			
+
+			SetDlgItemText(mainWindow, INFO_LABEL, L"File saved");
 		}
 		}
 		break;

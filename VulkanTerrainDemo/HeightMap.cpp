@@ -131,3 +131,23 @@ std::vector<uint32_t> HeightMap::generateIndices()
 	}
 	return indices;
 }
+
+void HeightMap::setVertices(std::vector<Vertex> vertices)
+{
+	heightMap.clear();
+	for (auto x = 0; x < patch_w; x++)
+	{
+		for (auto y = 0; y < patch_h; y++)
+		{
+			heightMap.push_back(int((0.5f + vertices[x + patch_w * y].pos[2]) * 255.0f * 255.0f / (float) zScale));
+		}
+	}
+}
+
+void HeightMap::saveAsImage(std::string path)
+{
+	Image image(heightMap, patch_w, patch_h);
+
+	image.saveToFile(path);	
+}
+

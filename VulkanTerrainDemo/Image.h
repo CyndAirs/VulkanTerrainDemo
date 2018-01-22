@@ -17,6 +17,14 @@ public:
 	*/
 	Image(std::string path, ImageType type);
 
+	/**
+	* Constructor, initialises the image with data from the file
+	* @param path path to image
+	* @param type wheteher or not the pixels should include alpha
+	*/
+	Image(std::vector<unsigned char> pixels, int w, int h);
+
+
 	/** 
 	* Destructor, frees memory taken by image array 
 	*/
@@ -34,6 +42,8 @@ public:
 	*/
 	unsigned char * getArray();
 
+	void saveToFile(std::string path);
+
 	/**
 	* Image width
 	*/
@@ -50,6 +60,8 @@ public:
 	int channels;
 
 protected:	
+
+	ImageType type;
 
 	/**
 	* Array of image pixels

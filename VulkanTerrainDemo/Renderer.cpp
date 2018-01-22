@@ -384,6 +384,11 @@ void Renderer::onWindowResized(GLFWwindow* window, int width, int height) {
 	app->bufferManager.initCommandBuffers();
 }
 
+std::vector<Vertex> Renderer::getVertices()
+{
+	return vertices;
+}
+
 VkSurfaceKHR Renderer::getSurface()
 {
 	return surface;

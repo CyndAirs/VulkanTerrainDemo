@@ -23,6 +23,7 @@ public:
 	*/
 	HeightMap::HeightMap(std::string filename, uint32_t patchsize, float ratio, uint16_t zScale);
 	
+
 	~HeightMap();
 
 	/** 
@@ -44,6 +45,10 @@ public:
 	* returns vector of integers containing indexes 
 	*/
 	std::vector<uint32_t> generateIndices();
+
+	void setVertices(std::vector<Vertex> vertices);
+
+	void saveAsImage(std::string path);
 
 
 private:
@@ -83,5 +88,6 @@ private:
 	* Model height scale
 	*/
 	uint16_t zScale;
+
 };
 

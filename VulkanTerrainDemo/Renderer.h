@@ -128,6 +128,8 @@ public:
 	*/
 	static void onWindowResized(GLFWwindow * window, int width, int height);
 
+	std::vector<Vertex> getVertices();
+
 private:
 
 	/**

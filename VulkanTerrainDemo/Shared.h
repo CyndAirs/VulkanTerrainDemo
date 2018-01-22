@@ -13,6 +13,10 @@
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#define _CRT_SECURE_NO_WARNINGS
+
+
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
