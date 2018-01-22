@@ -133,13 +133,13 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>C:\stb-master;C:\glm-0.9.8.3\glm;C:\glfw-3.2.1.bin.WIN64\include;C:\VulkanSDK\1.0.30.0\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\stb-master;$(SolutionDir)Dependencies\glm;$(SolutionDir)Dependencies\glfw-3.2.1.bin.WIN64\include;$(SolutionDir)Dependencies\nanogui\;$(SolutionDir)Dependencies\VulkanSDK\1.0.61.1\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_LIB;_MBCS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>C:\glfw-3.2.1.bin.WIN64\lib-vc2015;C:\VulkanSDK\1.0.30.0\Bin;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)Dependencies\VulkanSDK\1.0.61.1\Lib;$(SolutionDir)Dependencies\glfw-3.2.1.bin.WIN64\lib-vc2015;$(SolutionDir)Dependencies\VulkanSDK\1.0.61.1\Bin;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>vulkan-1.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>

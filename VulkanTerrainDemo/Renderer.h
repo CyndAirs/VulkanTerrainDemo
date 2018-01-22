@@ -129,13 +129,14 @@ public:
 	static void onWindowResized(GLFWwindow * window, int width, int height);
 
 	std::vector<Vertex> getVertices();
-
+	std::vector<glm::vec3> verticesColors;
 private:
-
+	void saveBackupColors();
 	/**
 	* Vector containing models's vertices
 	*/
 	std::vector<Vertex> vertices;
+	
 	/**
 	* Vector containing models's indices
 	*/
@@ -287,9 +288,16 @@ private:
 	{
 		FLOATING,
 		EDITING_RISE,
-		EDITING_FALL
+		EDITING_FALL,
+		COLORING
 	};
-
+	enum TerrainColor
+	{
+		RED,
+		GREEN,
+		BLUE
+	};
+	TerrainColor currentColor = RED;
 	AppState state = FLOATING;
 
 #if BUILD_ENABLE_VULKAN_DEBUG

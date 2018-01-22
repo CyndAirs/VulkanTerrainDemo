@@ -36,6 +36,7 @@ Renderer::~Renderer()
 void Renderer::run(HWND gui) {
 	initWindow();
 	initVulkan();
+	saveBackupColors();
 	mainLoop(gui);
 }
 
@@ -198,19 +199,42 @@ void Renderer::keyCallback(GLFWwindow* window, int key, int scancode, int action
 		if (key == GLFW_KEY_Q && action == GLFW_RELEASE)
 			app->up = 0;
 	}
-	if (key == GLFW_KEY_PAGE_UP && action == GLFW_PRESS)
+
+	if (app->state == COLORING)
+	{
+		if (key == GLFW_KEY_1 && action == GLFW_RELEASE)
+			app->currentColor = RED;
+		if (key == GLFW_KEY_2 && action == GLFW_RELEASE)
+			app->currentColor = GREEN;
+		if (key == GLFW_KEY_3 && action == GLFW_RELEASE)
+			app->currentColor = BLUE;
+	}
+
+	if (key == GLFW_KEY_PAGE_UP && action == GLFW_RELEASE)
 		if(app->editStrength < 1.0f)
 			app->editStrength += 0.01f;
-	if (key == GLFW_KEY_PAGE_DOWN && action == GLFW_PRESS)
+	if (key == GLFW_KEY_PAGE_DOWN && action == GLFW_RELEASE)
 		if (app->editStrength > 0.01f)
 			app->editStrength -= 0.01f;
-	if (key == GLFW_KEY_KP_ADD && action == GLFW_PRESS)
+	if (key == GLFW_KEY_KP_ADD && action == GLFW_RELEASE)
 		if(app->editingSize < 0.1f)
 			app->editingSize += 0.01f;
-	if (key == GLFW_KEY_KP_SUBTRACT && action == GLFW_PRESS)
+	if (key == GLFW_KEY_KP_SUBTRACT && action == GLFW_RELEASE)
 		if (app->editingSize > 0.01f)
 			app->editingSize -= 0.01f;
-
+	if (key == GLFW_KEY_K && action == GLFW_RELEASE)
+	{
+		if (app->state != COLORING)
+		{
+			app->state = COLORING;
+			app->camera.resetCameraToEditorMode();
+		}
+		else
+		{
+			app->state = FLOATING;
+			app->clearVertisesColor();
+		}
+	}
 	if (key == GLFW_KEY_F && action == GLFW_RELEASE)
 	{
 		if (app->state == FLOATING)
@@ -227,9 +251,9 @@ void Renderer::keyCallback(GLFWwindow* window, int key, int scancode, int action
 void Renderer::clearVertisesColor()
 {
 	Renderer* app = reinterpret_cast<Renderer*>(glfwGetWindowUserPointer(window));
-	for (auto& ver : app->vertices)
+	for (int i = 0; i < app->vertices.size(); i++)
 	{
-		ver.color[1] = ver.color[2] = 1.0f;
+		app->vertices[i].color = app->verticesColors[i];
 	}
 	app->refreshVertises();
 }
@@ -253,14 +277,30 @@ void Renderer::EditingHeights(double xpos, double ypos)
 	glm::vec3 unproj = glm::unProject(glm::vec3(xpos, ypos, 0.5f), glm::mat4(1.0f)*camera.GetViewMatrix(), camera.GetProjectionMatrix(), viewport);
 	test = std::to_string(unproj.x) + ", " + std::to_string(unproj.y) + ", " + std::to_string(unproj.x);
 	testTemp = std::wstring(test.begin(), test.end());
-	for (auto& ver : app->vertices)
+	for (int i =0; i < app->vertices.size(); i++)
 	{
-		if (near_equal(unproj.x, ver.pos.x / 10.0f, app->editingSize) && near_equal(-unproj.y, ver.pos.y / 10.0f, app->editingSize)) {
-			ver.color[1] = ver.color[2] = 0.0f;
+		if (near_equal(unproj.x, app->vertices[i].pos.x / 10.0f, app->editingSize) && near_equal(-unproj.y, app->vertices[i].pos.y / 10.0f, app->editingSize)) {
+			if (app->state != COLORING)
+				app->vertices[i].color = { 0.552, 0.039, 1 };
+			else
+			{
+				switch (app->currentColor)
+				{
+				case RED:
+					app->vertices[i].color = { 1, 0, 0 };
+					break;
+				case GREEN:
+					app->vertices[i].color = { 0, 1, 0 };
+					break;
+				case BLUE:
+					app->vertices[i].color = { 0, 0, 1 };
+					break;
+				}
+			}
 		}
 		else
 		{
-			ver.color[1] = ver.color[2] = 1.0f;
+			app->vertices[i].color = app->verticesColors[i];
 		}
 	}
 	app->refreshVertises();
@@ -282,10 +322,6 @@ void Renderer::cursorPosCallback(GLFWwindow * window, double xpos, double ypos)
 		float yoffset = app->lastY - ypos; // reversed since y-coordinates go from bottom to top
 		app->camera.ProcessMouseMovement(xoffset, yoffset, false);
 	}
-	/*else if (app->mousePressed)
-	{
-		app->ProcessClick(xpos, ypos);
-	}*/
 	else if (!app->mousePressed && (app->state != FLOATING))
 		app->EditingHeights(xpos, ypos);
 	app->lastX = xpos;
@@ -303,13 +339,42 @@ void Renderer::ProcessClick(double xpos, double ypos)
 	glm::vec3 unproj = glm::unProject(glm::vec3(xpos, ypos, 0.5f), glm::mat4(1.0f)*camera.GetViewMatrix(), camera.GetProjectionMatrix(), viewport);
 	test = std::to_string(unproj.x) + ", " + std::to_string(unproj.y) + ", " + std::to_string(unproj.x);
 	testTemp = std::wstring(test.begin(), test.end());
-	for (auto& ver : app->vertices)
+	for (int i = 0; i < app->vertices.size(); i++)
 	{
-		if (near_equal(unproj.x,ver.pos.x/10.0f, app->editingSize) && near_equal(-unproj.y, ver.pos.y / 10.0f, app->editingSize)) {
-			if(app->state == EDITING_RISE)
-				ver.pos.z += app->editStrength;
+		if (near_equal(unproj.x, app->vertices[i].pos.x/10.0f, app->editingSize) && near_equal(-unproj.y, app->vertices[i].pos.y / 10.0f, app->editingSize)) {
+			if (app->state != COLORING)
+				if (app->state == EDITING_RISE)
+					app->vertices[i].pos.z += app->editStrength;
+				else
+					app->vertices[i].pos.z -= app->editStrength;
 			else
-				ver.pos.z -= app->editStrength;
+			{
+				switch (app->currentColor)
+				{
+				case RED:
+					if (app->verticesColors[i] == glm::vec3({ 1, 1, 1 }))
+					{
+						app->verticesColors[i].g = app->verticesColors[i].b = 0.0f;
+					}
+						app->verticesColors[i].r = 1.0f;
+					break;
+				case GREEN:
+					if (app->verticesColors[i] == glm::vec3({ 1, 1, 1 }))
+					{
+						app->verticesColors[i].r = app->verticesColors[i].b = 0.0f;
+					}
+						app->verticesColors[i].g = 1.0f;
+					break;
+				case BLUE:
+					if (app->verticesColors[i] == glm::vec3({ 1, 1, 1 }))
+					{
+						app->verticesColors[i].r = app->verticesColors[i].g = 0.0f;
+					}
+						app->verticesColors[i].b = 1.0f;
+					break;
+				}
+				app->vertices[i].color = app->verticesColors[i];
+			}
 		}
 	}
 	app->refreshVertises();
@@ -387,6 +452,14 @@ void Renderer::onWindowResized(GLFWwindow* window, int width, int height) {
 std::vector<Vertex> Renderer::getVertices()
 {
 	return vertices;
+}
+
+void Renderer::saveBackupColors()
+{
+	for (int i = 0; i < vertices.size(); i++)
+	{
+		verticesColors.push_back(vertices[i].color);
+	}
 }
 
 VkSurfaceKHR Renderer::getSurface()
@@ -491,14 +564,7 @@ void Renderer::initSemaphores() {
 }
 
 #if BUILD_ENABLE_VULKAN_DEBUG
-std::wstring get_utf16(const std::string &str, int codepage)
-{
-	if (str.empty()) return std::wstring();
-	int sz = MultiByteToWideChar(codepage, 0, &str[0], (int)str.size(), 0, 0);
-	std::wstring res(sz, 0);
-	MultiByteToWideChar(codepage, 0, &str[0], (int)str.size(), &res[0], sz);
-	return res;
-}
+
 /** Initilises Vulkan's validation layer */
 VKAPI_ATTR VkBool32 VKAPI_CALL
 VulkanDebugCallback(

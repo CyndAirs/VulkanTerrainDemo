@@ -29,6 +29,7 @@
 */
 uint32_t findMemoryType(VkPhysicalDevice gpu, uint32_t typeFilter, VkMemoryPropertyFlags properties);
 
+std::wstring get_utf16(const std::string &str, int codepage);
 /** 
 * Checks results of Vulkan functions and interprets them as errors when nessesary 
 * @param result value returned from vulkan operation
