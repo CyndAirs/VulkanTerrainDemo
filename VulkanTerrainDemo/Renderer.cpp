@@ -469,7 +469,7 @@ UniformBufferObject Renderer::generateUniformData(float rotationX, float rotatio
 	UniformBufferObject ubo = {};
 	ubo.view = camera.GetViewMatrix();
 	ubo.proj = camera.GetProjectionMatrix();
-	ubo.lightPosition = glm::vec3(10, 10, 10);
+	ubo.lightPosition = camera.Position;
 	ubo.proj[1][1] *= -1;
 	return ubo;
 }

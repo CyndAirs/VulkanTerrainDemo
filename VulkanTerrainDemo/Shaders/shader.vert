@@ -23,7 +23,13 @@ out gl_PerVertex {
 void main() {
     gl_Position = ubo.proj * ubo.view * ubo.model * vec4(inPosition, 1.0);
 
-	fragColor = inColor * max(dot(normalize(ubo.lightPosition - vec3(gl_Position)), vec3(ubo.proj * ubo.view * ubo.model * vec4(inNormal,1.0))), 0.0);
+	float intensity = max(dot(inNormal, vec3(gl_Position) - ubo.lightPosition), 0.0);
+	intensity = 1-intensity;
+	
+	if(intensity > 0.1)
+		fragColor = inColor * (intensity);
+	else
+		fragColor = inColor * 0.1;
 
 	fragTexCoord = inTexCoord;
 }
